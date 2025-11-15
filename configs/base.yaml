@@ -1,0 +1,35 @@
+# ============================================
+# BASE CONFIGURATION
+# ============================================
+# Common configuration settings shared across all config files
+# This file can be included/merged with other configs to reduce repetition
+# ============================================
+
+# Project paths (common across all scripts)
+paths:
+  project_root: "."
+  data_dir: "data"
+  train_dir: "data/train"
+  test_dir: "data/test"
+  models_dir: "models"
+  logs_dir: "logs"
+  results_dir: "results"  # Organized results for presentation
+  output_dir: "."
+
+# Image preprocessing (standard settings)
+image:
+  size: [224, 224]  # Standard size for neural networks
+  channels: 3       # RGB
+  normalization: true
+
+# Data settings (common defaults)
+data:
+  validation_split: 0.2  # 20% for validation
+  random_seed: 42         # For reproducibility
+  shuffle: true
+
+# Logging (common settings)
+logging:
+  level: "INFO"  # Options: "DEBUG", "INFO", "WARNING", "ERROR"
+  save_logs: true
+

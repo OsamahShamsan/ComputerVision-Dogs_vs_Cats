@@ -1,0 +1,46 @@
+# ============================================
+# PREDICTION CONFIGURATION
+# ============================================
+# Configuration file for making predictions on test images
+# Usage: python src/predict.py --config predict
+# ============================================
+
+# Project paths
+paths:
+  project_root: "."
+  data_dir: "data"
+  test_dir: "data/test"
+  models_dir: "models"
+  output_dir: "."
+
+# Model settings
+model:
+  # Model path - can be specific file or "latest" to use most recent
+  path: "latest"  # Options: "latest", or specific path like "models/dogs_vs_cats_transfer_final_20251115_154323.h5"
+  model_type: null  # Auto-detect from filename if null
+  
+# Image preprocessing
+image:
+  size: [224, 224]  # Must match training image size
+  channels: 3
+  normalization: true
+
+# Prediction settings
+prediction:
+  batch_size: 32  # Process images in batches
+  output_csv: "results/predictions/predictions.csv"
+  threshold: 0.5  # Probability threshold for binary classification
+  save_probabilities: true  # Save raw probabilities in addition to binary predictions
+
+# Output settings
+output:
+  format: "csv"  # Options: "csv", "json"
+  include_confidence: true
+  sort_by_id: true
+
+# Logging
+logging:
+  level: "INFO"
+  save_logs: true
+  log_file: "logs/prediction.log"
+

@@ -78,5 +78,10 @@ htmlcov/
 secrets.json
 config.json
 
+# Results directory (generated files, but keep structure)
+results/*
+!results/.gitkeep
+!results/**/.gitkeep
+
 # Agent/internal files (not for version control)
 AGENT_GUIDELINES.md

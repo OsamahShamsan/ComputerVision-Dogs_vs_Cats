@@ -2,10 +2,18 @@
 # COMPARE_MODELS.PY - Visual Comparison of Trained Models
 # ============================================
 # This script compares different trained models and creates
-# visualizations for your presentation
+# visualizations and reports for analysis.
+# It supports configuration via YAML files for flexible usage.
+#
+# Usage:
+#   python src/compare_models.py                    # Uses default config (compare.yaml)
+#   python src/compare_models.py --config compare   # Uses configs/compare.yaml
+#   python src/compare_models.py --config-path custom.yaml
 # ============================================
 
 import os
+import sys
+import argparse
 import glob
 import json
 import numpy as np
@@ -13,8 +21,13 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 from tensorflow import keras
 
-# Get project root directory (parent of src/)
-PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Setup paths and import shared utilities
+from src.utils import setup_paths, get_project_root, ensure_dir, get_path, create_results_structure
+setup_paths()
+
+from src.config_loader import load_config, find_latest_model
+
+PROJECT_ROOT = get_project_root()
 
 # ============================================
 # FUNCTION: Load Model Information
@@ -41,12 +54,20 @@ def get_model_info(model_path):
         model_name = os.path.basename(model_path).replace('.h5', '')
         
         # Extract model type from filename
-        if 'simple' in model_name.lower():
+        # Checks for new model type names first, then falls back to old names for backward compatibility
+        if 'simple_cnn' in model_name.lower() or 'simple' in model_name.lower():
             model_type = 'Simple CNN'
-        elif 'advanced' in model_name.lower():
+        elif 'advanced_cnn' in model_name.lower() or 'advanced' in model_name.lower():
             model_type = 'Advanced CNN'
-        elif 'transfer' in model_name.lower():
+        elif 'deep_custom_cnn' in model_name.lower() or 'deep_custom' in model_name.lower():
+            model_type = 'Deep Custom CNN'
+        elif 'transfer_learning' in model_name.lower() or 'transfer' in model_name.lower():
             model_type = 'Transfer Learning'
+        # Backward compatibility with old naming
+        elif 'custom_cnn' in model_name.lower():
+            model_type = 'Simple CNN'  # Map old name to new name
+        elif 'deep_cnn' in model_name.lower() and 'custom' not in model_name.lower():
+            model_type = 'Advanced CNN'  # Map old name to new name
         else:
             model_type = 'Unknown'
         
@@ -107,7 +128,7 @@ def find_all_models(models_dir=None):
 # ============================================
 # FUNCTION: Create Comparison Visualization
 # ============================================
-def create_comparison_plot(model_infos, save_path=None):
+def create_comparison_plot(model_infos, save_path=None, config=None):
     """
     Create a visualization comparing different models.
     
@@ -117,17 +138,28 @@ def create_comparison_plot(model_infos, save_path=None):
         List of model info dictionaries
     save_path : str
         Path to save the plot
+    config : dict, optional
+        Configuration dictionary for visualization settings
     """
+    if config is None:
+        config = {}
+    
     if save_path is None:
-        save_path = os.path.join(PROJECT_ROOT, 'logs', 'model_comparison.png')
-    # Ensure logs directory exists
-    os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        save_path = os.path.join(PROJECT_ROOT, 'results', 'comparison', 'model_comparison.png')
+    
+    # Ensure directory exists
+    ensure_dir(os.path.dirname(save_path))
+    
+    # Get visualization settings from config
+    vis_config = config.get('visualization', {})
+    fig_size = vis_config.get('figure_size', [14, 10])
+    dpi = config.get('output', {}).get('plot_dpi', 300)
     if not model_infos:
         print("No model information to plot!")
         return
     
     # Create figure with subplots
-    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+    fig, axes = plt.subplots(2, 2, figsize=fig_size)
     fig.suptitle('Model Comparison for Dogs vs Cats Classification', 
                  fontsize=16, fontweight='bold')
     
@@ -188,8 +220,8 @@ def create_comparison_plot(model_infos, save_path=None):
     ax4.grid(axis='y', alpha=0.3)
     
     plt.tight_layout()
-    plt.savefig(save_path, dpi=300, bbox_inches='tight')
-    print(f"✓ Comparison plot saved to: {save_path}")
+    plt.savefig(save_path, dpi=dpi, bbox_inches='tight')
+    print(f"Comparison plot saved to: {save_path}")
     plt.close()
 
 # ============================================
@@ -223,9 +255,9 @@ def generate_report(model_infos, report_path=None):
     Generate a detailed text report.
     """
     if report_path is None:
-        report_path = os.path.join(PROJECT_ROOT, 'logs', 'model_comparison_report.txt')
-    # Ensure logs directory exists
-    os.makedirs(os.path.dirname(report_path), exist_ok=True)
+        report_path = os.path.join(PROJECT_ROOT, 'results', 'comparison', 'model_comparison_report.txt')
+    # Ensure directory exists
+    ensure_dir(os.path.dirname(report_path))
     with open(report_path, 'w') as f:
         f.write("=" * 90 + "\n")
         f.write("MODEL COMPARISON REPORT - DOGS VS CATS CLASSIFICATION\n")
@@ -249,44 +281,101 @@ def generate_report(model_infos, report_path=None):
         f.write("SUMMARY\n")
         f.write("=" * 90 + "\n")
         f.write("\nComplexity Comparison:\n")
-        f.write("  - Simple CNN: Basic architecture, moderate complexity\n")
-        f.write("  - Advanced CNN: Deeper layers, higher complexity\n")
-        f.write("  - Transfer Learning: Pre-trained base, efficient fine-tuning\n")
+        f.write("  - Simple CNN: 3 convolutional blocks, moderate complexity, trains from scratch\n")
+        f.write("  - Advanced CNN: 4 convolutional blocks, higher complexity, trains from scratch\n")
+        f.write("  - Deep Custom CNN: 5+ convolutional blocks, maximum depth, trains from scratch\n")
+        f.write("  - Transfer Learning: Pre-trained base model (MobileNetV2), efficient fine-tuning\n")
         f.write("\nUse Cases:\n")
-        f.write("  - Simple CNN: Good for learning, moderate accuracy\n")
-        f.write("  - Advanced CNN: Better accuracy, requires more training time\n")
-        f.write("  - Transfer Learning: Best accuracy, fastest training, industry standard\n")
+        f.write("  - Simple CNN: Good for learning, moderate accuracy (~75-85%), faster training\n")
+        f.write("  - Advanced CNN: Better accuracy (~80-88%), requires more training time\n")
+        f.write("  - Deep Custom CNN: High accuracy potential (~82-90%), significant training time\n")
+        f.write("  - Transfer Learning: Best accuracy (~85-92%), fastest training, industry standard\n")
     
-    print(f"✓ Detailed report saved to: {report_path}")
+    print(f"Detailed report saved to: {report_path}")
 
 # ============================================
 # MAIN EXECUTION
 # ============================================
 if __name__ == "__main__":
     """
-    Compare all trained models.
-    
-    Usage:
-        python compare_models.py
+    Main entry point for model comparison script.
+    Supports command-line arguments for configuration selection.
     """
+    parser = argparse.ArgumentParser(
+        description='Compare trained models and generate visualizations',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  python src/compare_models.py                    # Use default config (compare.yaml)
+  python src/compare_models.py --config compare   # Use configs/compare.yaml
+  python src/compare_models.py --config-path custom.yaml  # Use custom config file
+        """
+    )
+    
+    parser.add_argument(
+        '--config',
+        type=str,
+        default='compare',
+        help='Name of config file in configs/ directory (without extension)'
+    )
+    
+    parser.add_argument(
+        '--config-path',
+        type=str,
+        default=None,
+        help='Full path to custom configuration file'
+    )
+    
+    args = parser.parse_args()
+    
+    # Load configuration
+    config = load_config(config_path=args.config_path, config_name=args.config if not args.config_path else None)
+    
+    # Extract configuration sections
+    paths = config.get('paths', {})
+    models_config = config.get('models', {})
+    output_config = config.get('output', {})
     
     print("=" * 70)
     print("MODEL COMPARISON TOOL")
     print("=" * 70)
     print("\nFinding trained models...")
     
-    # Find all models
-    models_dir = os.path.join(PROJECT_ROOT, 'models')
-    model_files = find_all_models(models_dir)
+    # Create results structure
+    results_dir = create_results_structure()
+    
+    # Find models based on configuration
+    models_dir = get_path(paths, 'models_dir', os.path.join(PROJECT_ROOT, 'models'))
+    selection = models_config.get('selection', 'all')
+    
+    if selection == 'all':
+        model_files = find_all_models(models_dir)
+    elif selection == 'latest':
+        # Find latest of each type
+        # Searches for the most recent model of each architecture type
+        model_files = []
+        for model_type in ['simple_cnn', 'advanced_cnn', 'deep_custom_cnn', 'transfer_learning']:
+            latest = find_latest_model(models_dir, model_type)
+            if latest:
+                model_files.append(latest)
+        # Also check for old naming patterns for backward compatibility
+        for old_name, new_name in [('custom_cnn', 'simple_cnn'), ('deep_cnn', 'advanced_cnn'), ('transfer', 'transfer_learning')]:
+            if not any(new_name in f.lower() for f in model_files):
+                latest = find_latest_model(models_dir, old_name)
+                if latest:
+                    model_files.append(latest)
+    elif selection == 'specific':
+        specific_models = models_config.get('specific_models', [])
+        model_files = [os.path.join(models_dir, m) for m in specific_models if os.path.exists(os.path.join(models_dir, m))]
+    else:
+        model_files = find_all_models(models_dir)
     
     if not model_files:
         print("\nNo models found. Please train some models first:")
         print("  python src/train.py")
-        print("  OR")
-        print("  python run_all_experiments.py")
         exit(1)
     
-    print(f"✓ Found {len(model_files)} model(s)")
+    print(f"Found {len(model_files)} model(s)")
     
     # Load information for each model
     print("\nLoading model information...")
@@ -295,7 +384,7 @@ if __name__ == "__main__":
         info = get_model_info(model_file)
         if info:
             model_infos.append(info)
-            print(f"  ✓ Loaded: {info['type']}")
+            print(f"  Loaded: {info['type']}")
     
     if not model_infos:
         print("No valid models could be loaded!")
@@ -305,19 +394,30 @@ if __name__ == "__main__":
     print_comparison_table(model_infos)
     
     # Generate visualizations
-    print("\nGenerating comparison visualizations...")
-    create_comparison_plot(model_infos)
+    if output_config.get('comparison_plot'):
+        print("\nGenerating comparison visualizations...")
+        plot_path = output_config.get('comparison_plot')
+        if not os.path.isabs(plot_path):
+            plot_path = os.path.join(results_dir['comparison'], os.path.basename(plot_path))
+        ensure_dir(os.path.dirname(plot_path))
+        create_comparison_plot(model_infos, save_path=plot_path, config=config)
     
     # Generate report
-    print("\nGenerating detailed report...")
-    generate_report(model_infos)
+    if output_config.get('report_file'):
+        print("\nGenerating detailed report...")
+        report_path = output_config.get('report_file')
+        if not os.path.isabs(report_path):
+            report_path = os.path.join(results_dir['comparison'], os.path.basename(report_path))
+        ensure_dir(os.path.dirname(report_path))
+        generate_report(model_infos, report_path=report_path)
     
     print("\n" + "=" * 70)
     print("COMPARISON COMPLETE!")
     print("=" * 70)
     print("\nGenerated files:")
-    print("  - logs/model_comparison.png (visual comparison)")
-    print("  - logs/model_comparison_report.txt (detailed report)")
-    print("\nThese files are perfect for your presentation!")
+    if output_config.get('comparison_plot'):
+        print(f"  - {output_config.get('comparison_plot')} (visual comparison)")
+    if output_config.get('report_file'):
+        print(f"  - {output_config.get('report_file')} (detailed report)")
     print()
 

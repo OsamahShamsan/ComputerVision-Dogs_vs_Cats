@@ -1,0 +1,117 @@
+# ============================================
+# TRAINING CONFIGURATION
+# ============================================
+# Configuration file for model training
+# Usage: python src/train.py --config train
+# ============================================
+
+# Project paths
+paths:
+  project_root: "."  # Will be resolved to absolute path
+  data_dir: "data"
+  train_dir: "data/train"
+  models_dir: "models"
+  logs_dir: "logs"
+
+# Image preprocessing settings
+image:
+  size: [224, 224]  # [width, height] - Common sizes: [224, 224], [128, 128], [256, 256]
+  channels: 3  # RGB
+  normalization: true  # Normalize pixel values to [0, 1]
+
+# Data settings
+data:
+  max_training_images: 5000  # Set to null for full dataset (all 25K images), or number for subset
+  # For full dataset training, set: max_training_images: null
+  validation_split: 0.2  # Fraction of data for validation (0.2 = 20%)
+  random_seed: 42  # For reproducibility
+  shuffle: true
+
+# Model architecture settings
+model:
+  type: "simple_cnn"  # Options: "simple_cnn", "advanced_cnn", "deep_custom_cnn", "transfer_learning"
+  input_shape: [224, 224, 3]  # [height, width, channels] - auto-set from image.size
+  num_classes: 2
+  
+  # Simple CNN settings (3 convolutional blocks, trains from scratch)
+  simple_cnn:
+    conv_blocks: 3
+    filters: [32, 64, 128]
+    dense_units: [512, 256]
+    dropout_rate: 0.5
+    learning_rate: 0.001
+  
+  # Advanced CNN settings (4 convolutional blocks, trains from scratch)
+  advanced_cnn:
+    conv_blocks: 4
+    filters: [32, 64, 128, 256]
+    dense_units: [1024, 512]
+    dropout_rate: 0.5
+    learning_rate: 0.0001
+  
+  # Deep Custom CNN settings (5+ convolutional blocks, trains from scratch)
+  deep_custom_cnn:
+    conv_blocks: 5
+    filters: [32, 64, 128, 256, 512]
+    dense_units: [1024, 512, 256]
+    dropout_rate: 0.5
+    learning_rate: 0.0001
+  
+  # Transfer learning settings (pre-trained base model, fine-tuned)
+  transfer_learning:
+    base_model: "MobileNetV2"  # Options: "MobileNetV2", "ResNet50", "VGG16", "InceptionV3"
+    weights: "imagenet"
+    trainable_base: false  # Freeze base model layers (faster training)
+    dense_units: [128]
+    dropout_rate: 0.5
+    learning_rate: 0.001
+
+# Training hyperparameters
+training:
+  batch_size: 32  # Images per batch (common: 16, 32, 64, 128)
+  epochs: 10  # Number of training epochs
+  optimizer: "adam"  # Options: "adam", "sgd", "rmsprop"
+  loss: "binary_crossentropy"
+  metrics: ["accuracy"]
+  verbose: 1  # 0 = silent, 1 = progress bar, 2 = one line per epoch
+
+# Callbacks configuration
+callbacks:
+  # Model checkpoint
+  checkpoint:
+    enabled: true
+    monitor: "val_accuracy"
+    save_best_only: true
+    mode: "max"
+    verbose: 1
+  
+  # Early stopping
+  early_stopping:
+    enabled: true
+    monitor: "val_accuracy"
+    patience: 5  # Wait 5 epochs without improvement
+    restore_best_weights: true
+    verbose: 1
+  
+  # Learning rate reduction
+  reduce_lr:
+    enabled: true
+    monitor: "val_loss"
+    factor: 0.5  # Reduce LR by half
+    patience: 3
+    min_lr: 0.00001
+    verbose: 1
+
+# Output settings
+output:
+  save_final_model: true
+  model_name_prefix: "dogs_vs_cats"
+  include_timestamp: true
+  save_history: false  # Save training history to JSON
+
+# Logging
+logging:
+  level: "INFO"  # Options: "DEBUG", "INFO", "WARNING", "ERROR"
+  save_logs: true
+  log_file: "logs/training.log"
+

@@ -1,16 +1,20 @@
 # ============================================
 # TRAIN.PY - Train the Neural Network Model
 # ============================================
-# This script:
-#   1. Loads and preprocesses the training data
-#   2. Creates the neural network model
-#   3. Trains the model on the data
-#   4. Saves the trained model
-#   5. Evaluates performance
+# This script trains a neural network model for image classification.
+# It supports configuration via YAML files for flexible experimentation.
+#
+# Usage:
+#   python src/train.py                    # Uses default config (train.yaml)
+#   python src/train.py --config train     # Uses configs/train.yaml
+#   python src/train.py --config debug     # Uses configs/debug.yaml
+#   python src/train.py --config-path path/to/custom.yaml
 # ============================================
 
-# Import necessary libraries
 import os
+import sys
+import argparse
+import shutil
 import numpy as np
 from datetime import datetime
 
@@ -18,64 +22,64 @@ from datetime import datetime
 import tensorflow as tf
 from tensorflow import keras
 
-# Import our custom modules
-# These are the files we created in the src/ folder
-import sys
-# Get project root directory
-PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-# Add parent directory to path for imports
-sys.path.insert(0, PROJECT_ROOT)
+# Setup paths and import shared utilities
+from src.utils import setup_paths, get_project_root, ensure_dir, get_path, create_results_structure
+setup_paths()
 
+# Import custom modules
+from src.config_loader import load_config
 from src.data_loader import load_images_from_folder, split_data
-from src.model import create_simple_model, create_advanced_model, create_transfer_learning_model
+from src.model import (
+    create_simple_cnn_model,
+    create_advanced_cnn_model,
+    create_deep_custom_cnn_model,
+    create_transfer_learning_model
+)
 
-# ============================================
-# CONFIGURATION (Settings)
-# ============================================
-# These are parameters you can adjust
+PROJECT_ROOT = get_project_root()
 
-# Image settings
-IMAGE_SIZE = (224, 224)  # Size to resize images to (width, height)
-# Common sizes: (224, 224), (128, 128), (256, 256)
-# Larger = better accuracy but slower training
 
-# Training settings
-BATCH_SIZE = 32  # Number of images processed at once
-# Larger batch = faster but uses more memory
-# Common values: 16, 32, 64, 128
-
-EPOCHS = 10  # Number of times to go through entire dataset
-# 10 epochs is good for full training - gives model time to learn
-# More epochs = more training, but risk of overfitting
-
-VALIDATION_SPLIT = 0.2  # 20% of data for validation
-# Validation set: Used to check model performance during training
-# Not used for training, only for evaluation
-
-# Model settings
-MODEL_TYPE = 'transfer'  # Options: 'simple', 'advanced', 'transfer'
-# 'simple': Basic CNN (fast, good for learning)
-# 'advanced': More layers (slower, better accuracy)
-# 'transfer': Transfer learning (best accuracy, requires internet for first run)
-
-# Data settings
-MAX_TRAINING_IMAGES = 5000  # Using 5000 images for balanced training (good for presentation)
-# Change to None for full training (all 25K images), or set number like 1000, 5000 for testing
-# For presentation comparison: 5000 images gives good results in reasonable time
-
-# ============================================
-# FUNCTION: Train the Model
-# ============================================
-def train_model():
+def train_model(config_path=None, config_name=None):
     """
-    Main training function.
-    This orchestrates the entire training process.
+    Main training function that orchestrates the entire training process.
+    
+    Parameters:
+    ----------
+    config_path : str, optional
+        Full path to configuration file
+    config_name : str, optional
+        Name of configuration file in configs/ directory (without extension)
+    
+    Returns:
+    -------
+    model : Keras Model
+        Trained model
+    history : History
+        Training history object
     """
+    # Load configuration
+    config = load_config(config_path=config_path, config_name=config_name)
+    
+    # Extract configuration sections
+    paths = config.get('paths', {})
+    image_config = config.get('image', {})
+    data_config = config.get('data', {})
+    model_config = config.get('model', {})
+    training_config = config.get('training', {})
+    callbacks_config = config.get('callbacks', {})
+    output_config = config.get('output', {})
+    logging_config = config.get('logging', {})
+    
+    # Set random seeds for reproducibility
+    random_seed = data_config.get('random_seed', 42)
+    np.random.seed(random_seed)
+    tf.random.set_seed(random_seed)
     
     print("=" * 70)
     print("DOGS VS CATS CLASSIFICATION - MODEL TRAINING")
     print("=" * 70)
     print(f"Start time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"Configuration: {config_name or config_path or 'default'}")
     print()
     
     # ============================================
@@ -84,21 +88,26 @@ def train_model():
     print("STEP 1: Loading training data...")
     print("-" * 70)
     
-    # Load images from train folder
-    # This function is defined in data_loader.py
-    data_train_path = os.path.join(PROJECT_ROOT, 'data', 'train')
+    # Get paths using shared utility
+    train_dir = get_path(paths, 'train_dir', os.path.join(PROJECT_ROOT, 'data', 'train'))
+    image_size = tuple(image_config.get('size', [224, 224]))
+    max_images = data_config.get('max_training_images')
+    
+    # Create results structure
+    results_dir = create_results_structure()
+    
+    # Load images
     images, labels, filenames = load_images_from_folder(
-        folder_path=data_train_path,
-        target_size=IMAGE_SIZE,
-        max_images=MAX_TRAINING_IMAGES
+        folder_path=train_dir,
+        target_size=image_size,
+        max_images=max_images
     )
     
-    # Check if we have data
     if len(images) == 0:
-        print(f"ERROR: No images loaded! Check the '{data_train_path}' folder path.")
-        return
+        print(f"ERROR: No images loaded! Check the '{train_dir}' folder path.")
+        return None, None
     
-    print(f"✓ Loaded {len(images)} images")
+    print(f"Loaded {len(images)} images")
     print(f"  - Cats: {np.sum(labels == 0)}")
     print(f"  - Dogs: {np.sum(labels == 1)}")
     print()
@@ -109,14 +118,15 @@ def train_model():
     print("STEP 2: Splitting data into training and validation sets...")
     print("-" * 70)
     
-    # Split data: 80% for training, 20% for validation
+    validation_split = data_config.get('validation_split', 0.2)
     X_train, X_val, y_train, y_val = split_data(
         images, 
         labels, 
-        validation_split=VALIDATION_SPLIT
+        validation_split=validation_split,
+        random_seed=random_seed
     )
     
-    print("✓ Data split complete")
+    print("Data split complete")
     print()
     
     # ============================================
@@ -125,70 +135,115 @@ def train_model():
     print("STEP 3: Creating neural network model...")
     print("-" * 70)
     
-    # Choose model type based on configuration
-    if MODEL_TYPE == 'simple':
-        model = create_simple_model(input_shape=(*IMAGE_SIZE, 3))
-    elif MODEL_TYPE == 'advanced':
-        model = create_advanced_model(input_shape=(*IMAGE_SIZE, 3))
-    elif MODEL_TYPE == 'transfer':
-        model = create_transfer_learning_model(input_shape=(*IMAGE_SIZE, 3))
-    else:
-        print(f"ERROR: Unknown model type '{MODEL_TYPE}'")
-        return
+    # Determine input shape
+    input_shape = tuple(image_config.get('input_shape', [*image_size, image_config.get('channels', 3)]))
+    if len(input_shape) == 2:
+        input_shape = (*input_shape, image_config.get('channels', 3))
     
-    print("✓ Model created")
+    # Get model type from configuration
+    # Available types: simple_cnn, advanced_cnn, deep_custom_cnn, transfer_learning
+    # Each type represents a different architecture with varying complexity and accuracy
+    model_type = model_config.get('type', 'simple_cnn')
+    
+    # Create model based on type specified in configuration
+    # Each model type has different architecture, complexity, and training characteristics
+    if model_type == 'simple_cnn':
+        # Simple CNN: 3 convolutional blocks, moderate complexity, trains from scratch
+        # Best for: Learning basics, moderate accuracy (~75-85%), faster training
+        model = create_simple_cnn_model(
+            input_shape=input_shape,
+            num_classes=model_config.get('num_classes', 2),
+            config=model_config.get('simple_cnn', {})
+        )
+    elif model_type == 'advanced_cnn':
+        # Advanced CNN: 4 convolutional blocks, higher complexity, trains from scratch
+        # Best for: Better accuracy (~80-88%), requires more training time
+        model = create_advanced_cnn_model(
+            input_shape=input_shape,
+            num_classes=model_config.get('num_classes', 2),
+            config=model_config.get('advanced_cnn', {})
+        )
+    elif model_type == 'deep_custom_cnn':
+        # Deep Custom CNN: 5+ convolutional blocks, maximum depth, trains from scratch
+        # Best for: High accuracy potential (~82-90%), significant training time
+        model = create_deep_custom_cnn_model(
+            input_shape=input_shape,
+            num_classes=model_config.get('num_classes', 2),
+            config=model_config.get('deep_custom_cnn', {})
+        )
+    elif model_type == 'transfer_learning':
+        # Transfer Learning: Pre-trained base model with custom layers, fine-tuned
+        # Best for: Best accuracy (~85-92%), fastest training, industry standard
+        model = create_transfer_learning_model(
+            input_shape=input_shape,
+            num_classes=model_config.get('num_classes', 2),
+            config=model_config.get('transfer_learning', {})
+        )
+    else:
+        # Invalid model type specified in configuration
+        # Display error message with available options
+        print(f"ERROR: Unknown model type '{model_type}'")
+        print("Available options: 'simple_cnn', 'advanced_cnn', 'deep_custom_cnn', 'transfer_learning'")
+        return None, None
+    
+    print("Model created")
     print()
     
     # ============================================
-    # STEP 4: Set Up Callbacks (Optional but Useful)
+    # STEP 4: Set Up Callbacks
     # ============================================
     print("STEP 4: Setting up training callbacks...")
     print("-" * 70)
     
-    # Create logs directory if it doesn't exist
-    logs_dir = os.path.join(PROJECT_ROOT, 'logs')
-    os.makedirs(logs_dir, exist_ok=True)
+    # Create directories using shared utilities
+    logs_dir = get_path(paths, 'logs_dir', os.path.join(PROJECT_ROOT, 'logs'))
+    models_dir = get_path(paths, 'models_dir', os.path.join(PROJECT_ROOT, 'models'))
+    ensure_dir(models_dir)
+    ensure_dir(logs_dir)
     
-    # Create models directory if it doesn't exist
-    models_dir = os.path.join(PROJECT_ROOT, 'models')
-    os.makedirs(models_dir, exist_ok=True)
+    # Generate model filename
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S') if output_config.get('include_timestamp', True) else ''
+    prefix = output_config.get('model_name_prefix', 'dogs_vs_cats')
+    model_filename = os.path.join(models_dir, f'{prefix}_{model_type}_{timestamp}.h5')
     
-    # Generate unique filename with timestamp
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    model_filename = os.path.join(models_dir, f'dogs_vs_cats_{MODEL_TYPE}_{timestamp}.h5')
+    # Setup callbacks
+    callbacks = []
     
-    # Callbacks: Functions called during training
+    # ModelCheckpoint
+    checkpoint_cfg = callbacks_config.get('checkpoint', {})
+    if checkpoint_cfg.get('enabled', True):
+        callbacks.append(keras.callbacks.ModelCheckpoint(
+            filepath=model_filename,
+            monitor=checkpoint_cfg.get('monitor', 'val_accuracy'),
+            save_best_only=checkpoint_cfg.get('save_best_only', True),
+            mode=checkpoint_cfg.get('mode', 'max'),
+            verbose=checkpoint_cfg.get('verbose', 1)
+        ))
     
-    # ModelCheckpoint: Save model after each epoch if it improves
-    checkpoint = keras.callbacks.ModelCheckpoint(
-        filepath=model_filename,
-        monitor='val_accuracy',  # Watch validation accuracy
-        save_best_only=True,      # Only save if better than previous
-        mode='max',               # Maximize accuracy
-        verbose=1                 # Print messages
-    )
+    # EarlyStopping
+    early_stop_cfg = callbacks_config.get('early_stopping', {})
+    if early_stop_cfg.get('enabled', True):
+        callbacks.append(keras.callbacks.EarlyStopping(
+            monitor=early_stop_cfg.get('monitor', 'val_accuracy'),
+            patience=early_stop_cfg.get('patience', 5),
+            restore_best_weights=early_stop_cfg.get('restore_best_weights', True),
+            verbose=early_stop_cfg.get('verbose', 1)
+        ))
     
-    # EarlyStopping: Stop training if model stops improving
-    early_stopping = keras.callbacks.EarlyStopping(
-        monitor='val_accuracy',   # Watch validation accuracy
-        patience=5,               # Wait 5 epochs without improvement
-        restore_best_weights=True, # Use best weights when stopping
-        verbose=1
-    )
+    # ReduceLROnPlateau
+    reduce_lr_cfg = callbacks_config.get('reduce_lr', {})
+    if reduce_lr_cfg.get('enabled', True):
+        callbacks.append(keras.callbacks.ReduceLROnPlateau(
+            monitor=reduce_lr_cfg.get('monitor', 'val_loss'),
+            factor=reduce_lr_cfg.get('factor', 0.5),
+            patience=reduce_lr_cfg.get('patience', 3),
+            min_lr=reduce_lr_cfg.get('min_lr', 0.00001),
+            verbose=reduce_lr_cfg.get('verbose', 1)
+        ))
     
-    # ReduceLROnPlateau: Reduce learning rate if stuck
-    reduce_lr = keras.callbacks.ReduceLROnPlateau(
-        monitor='val_loss',       # Watch validation loss
-        factor=0.5,               # Reduce learning rate by half
-        patience=3,               # Wait 3 epochs
-        min_lr=0.00001,           # Minimum learning rate
-        verbose=1
-    )
-    
-    callbacks = [checkpoint, early_stopping, reduce_lr]
-    
-    print("✓ Callbacks configured")
-    print(f"  - Model will be saved to: {model_filename}")
+    print("Callbacks configured")
+    if callbacks:
+        print(f"  - Model will be saved to: {model_filename}")
     print()
     
     # ============================================
@@ -196,28 +251,31 @@ def train_model():
     # ============================================
     print("STEP 5: Training the model...")
     print("-" * 70)
-    print(f"  Epochs: {EPOCHS}")
-    print(f"  Batch size: {BATCH_SIZE}")
+    
+    batch_size = training_config.get('batch_size', 32)
+    epochs = training_config.get('epochs', 10)
+    verbose = training_config.get('verbose', 1)
+    
+    print(f"  Epochs: {epochs}")
+    print(f"  Batch size: {batch_size}")
     print(f"  Training samples: {len(X_train)}")
     print(f"  Validation samples: {len(X_val)}")
     print()
-    print("This may take a while... Please be patient!")
+    print("Training in progress...")
     print()
     
     # Train the model
-    # This is where the magic happens!
-    # The model learns to distinguish dogs from cats
     history = model.fit(
-        X_train, y_train,                    # Training data and labels
-        batch_size=BATCH_SIZE,               # Images per batch
-        epochs=EPOCHS,                       # Number of training rounds
-        validation_data=(X_val, y_val),      # Validation data
-        callbacks=callbacks,                  # Callbacks (save, early stop, etc.)
-        verbose=1                            # Print progress (1 = detailed)
+        X_train, y_train,
+        batch_size=batch_size,
+        epochs=epochs,
+        validation_data=(X_val, y_val),
+        callbacks=callbacks,
+        verbose=verbose
     )
     
     print()
-    print("✓ Training complete!")
+    print("Training complete")
     print()
     
     # ============================================
@@ -226,8 +284,6 @@ def train_model():
     print("STEP 6: Evaluating model performance...")
     print("-" * 70)
     
-    # Evaluate on validation set
-    # This tells us how well the model performs
     val_loss, val_accuracy = model.evaluate(X_val, y_val, verbose=0)
     
     print(f"Final Validation Accuracy: {val_accuracy * 100:.2f}%")
@@ -237,15 +293,20 @@ def train_model():
     # ============================================
     # STEP 7: Save Final Model
     # ============================================
-    print("STEP 7: Saving final model...")
-    print("-" * 70)
-    
-    # Save the final model (even if not the best)
-    final_model_filename = os.path.join(models_dir, f'dogs_vs_cats_{MODEL_TYPE}_final_{timestamp}.h5')
-    model.save(final_model_filename)
-    
-    print(f"✓ Model saved to: {final_model_filename}")
-    print()
+    if output_config.get('save_final_model', True):
+        print("STEP 7: Saving final model...")
+        print("-" * 70)
+        
+        final_model_filename = os.path.join(models_dir, f'{prefix}_{model_type}_final_{timestamp}.h5')
+        model.save(final_model_filename)
+        
+        # Also copy to results/models for presentation
+        results_model_path = os.path.join(results_dir['models'], os.path.basename(final_model_filename))
+        shutil.copy2(final_model_filename, results_model_path)
+        
+        print(f"Model saved to: {final_model_filename}")
+        print(f"Model copied to: {results_model_path}")
+        print()
     
     # ============================================
     # SUMMARY
@@ -253,11 +314,12 @@ def train_model():
     print("=" * 70)
     print("TRAINING SUMMARY")
     print("=" * 70)
-    print(f"Model type: {MODEL_TYPE}")
+    print(f"Model type: {model_type}")
     print(f"Training images: {len(X_train)}")
     print(f"Validation images: {len(X_val)}")
     print(f"Final accuracy: {val_accuracy * 100:.2f}%")
-    print(f"Model saved: {final_model_filename}")
+    if output_config.get('save_final_model', True):
+        print(f"Model saved: {final_model_filename}")
     print(f"End time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("=" * 70)
     
@@ -269,18 +331,43 @@ def train_model():
 # ============================================
 if __name__ == "__main__":
     """
-    Run this script to train the model:
-    python src/train.py
+    Main entry point for training script.
+    Supports command-line arguments for configuration selection.
     """
+    parser = argparse.ArgumentParser(
+        description='Train a neural network model for Dogs vs Cats classification',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  python src/train.py                    # Use default config (train.yaml)
+  python src/train.py --config train     # Use configs/train.yaml
+  python src/train.py --config debug     # Use configs/debug.yaml
+  python src/train.py --config-path custom.yaml  # Use custom config file
+        """
+    )
     
-    # Set random seeds for reproducibility
-    # This ensures results are consistent across runs
-    np.random.seed(42)
-    tf.random.set_seed(42)
+    parser.add_argument(
+        '--config',
+        type=str,
+        default='train',
+        help='Name of config file in configs/ directory (without extension)'
+    )
+    
+    parser.add_argument(
+        '--config-path',
+        type=str,
+        default=None,
+        help='Full path to custom configuration file'
+    )
+    
+    args = parser.parse_args()
     
     # Train the model
-    model, history = train_model()
+    model, history = train_model(
+        config_path=args.config_path,
+        config_name=args.config if not args.config_path else None
+    )
     
-    print("\n🎉 Training completed successfully!")
-    print("You can now use the saved model to make predictions.")
-
+    if model is not None:
+        print("\nTraining completed successfully")
+        print("The saved model can now be used to make predictions.")

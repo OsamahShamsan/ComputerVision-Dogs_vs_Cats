@@ -1,0 +1,72 @@
+# ============================================
+# DEBUG CONFIGURATION
+# ============================================
+# Configuration file for debugging and quick testing
+# Usage: python src/train.py --config debug
+# ============================================
+
+# Project paths
+paths:
+  project_root: "."
+  data_dir: "data"
+  train_dir: "data/train"
+  models_dir: "models"
+  logs_dir: "logs"
+
+# Image preprocessing settings
+image:
+  size: [128, 128]  # Smaller size for faster debugging
+  channels: 3
+  normalization: true
+
+# Data settings (small subset for quick testing)
+data:
+  max_training_images: 100  # Very small subset for debugging
+  validation_split: 0.2
+  random_seed: 42
+  shuffle: true
+
+# Model architecture settings
+model:
+  type: "simple_cnn"  # Use simplest model for debugging
+  input_shape: [128, 128, 3]
+  num_classes: 2
+  
+  simple_cnn:
+    conv_blocks: 2  # Reduced for faster testing
+    filters: [16, 32]  # Fewer filters
+    dense_units: [64]  # Smaller dense layers
+    dropout_rate: 0.3
+    learning_rate: 0.001
+
+# Training hyperparameters (minimal for debugging)
+training:
+  batch_size: 16  # Smaller batch size
+  epochs: 2  # Just 2 epochs for quick testing
+  optimizer: "adam"
+  loss: "binary_crossentropy"
+  metrics: ["accuracy"]
+  verbose: 1
+
+# Callbacks (minimal for debugging)
+callbacks:
+  checkpoint:
+    enabled: false  # Disable to speed up
+  early_stopping:
+    enabled: false
+  reduce_lr:
+    enabled: false
+
+# Output settings
+output:
+  save_final_model: true
+  model_name_prefix: "debug"
+  include_timestamp: true
+  save_history: false
+
+# Logging (verbose for debugging)
+logging:
+  level: "DEBUG"  # More verbose logging
+  save_logs: true
+  log_file: "logs/debug.log"
+

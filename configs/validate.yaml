@@ -1,0 +1,55 @@
+# ============================================
+# VALIDATION CONFIGURATION
+# ============================================
+# Configuration file for model validation and evaluation
+# Usage: python src/validate.py --config validate
+# ============================================
+
+# Project paths
+paths:
+  project_root: "."
+  data_dir: "data"
+  train_dir: "data/train"
+  models_dir: "models"
+  logs_dir: "logs"
+
+# Model settings
+model:
+  path: "latest"  # Model to validate
+  model_type: null  # Auto-detect
+
+# Image preprocessing
+image:
+  size: [224, 224]  # Must match training size
+  channels: 3
+  normalization: true
+
+# Validation data settings
+data:
+  validation_split: 0.2  # Use same split as training
+  random_seed: 42  # Must match training seed
+  max_images: null  # Use all images for validation
+
+# Evaluation settings
+evaluation:
+  batch_size: 32
+  metrics: ["accuracy", "precision", "recall", "f1_score"]
+  generate_confusion_matrix: true
+  generate_classification_report: true
+  visualize_predictions: true
+  num_samples_to_visualize: 16
+
+# Output settings
+output:
+  results_file: "results/validation/validation_results.txt"
+  confusion_matrix_plot: "results/validation/confusion_matrix.png"
+  predictions_plot: "results/validation/prediction_samples.png"
+  save_predictions: true
+  predictions_file: "results/validation/validation_predictions.csv"
+
+# Logging
+logging:
+  level: "INFO"
+  save_logs: true
+  log_file: "logs/validation.log"
+

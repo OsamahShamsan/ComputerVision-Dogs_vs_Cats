@@ -1,0 +1,41 @@
+# ============================================
+# MODEL COMPARISON CONFIGURATION
+# ============================================
+# Configuration file for comparing trained models
+# Usage: python src/compare_models.py --config compare
+# ============================================
+
+# Project paths
+paths:
+  project_root: "."
+  models_dir: "models"
+  logs_dir: "logs"
+
+# Model selection
+models:
+  # Options: "all" (compare all models), "latest" (latest of each type), or list of specific files
+  selection: "all"
+  specific_models: []  # List of specific model filenames if selection is "specific"
+
+# Output settings
+output:
+  comparison_plot: "results/comparison/model_comparison.png"
+  report_file: "results/comparison/model_comparison_report.txt"
+  plot_format: "png"  # Options: "png", "pdf", "svg"
+  plot_dpi: 300
+  include_statistics: true
+
+# Visualization settings
+visualization:
+  figure_size: [14, 10]
+  color_scheme: "default"  # Options: "default", "colorblind", "grayscale"
+  show_parameters: true
+  show_file_size: true
+  show_layers: true
+  show_trainable_params: true
+
+# Logging
+logging:
+  level: "INFO"
+  save_logs: false
+
