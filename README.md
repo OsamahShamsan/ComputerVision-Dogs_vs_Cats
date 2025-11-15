@@ -43,12 +43,18 @@ Dogs_vs_Cats/
 │   └── sampleSubmission.csv
 │
 ├── models/               # Saved trained models
+│   ├── partial_dataset/  # Models trained on partial dataset (sample)
+│   └── full_dataset/     # Models trained on full dataset (all 25K images)
 ├── logs/                 # Training logs
+│   ├── partial_dataset/  # Logs from partial dataset training
+│   └── full_dataset/     # Logs from full dataset training
 ├── results/              # Organized results for presentation
 │   ├── models/           # Best trained models (copies)
 │   ├── plots/            # Visualization plots
 │   ├── reports/          # Text reports
-│   ├── predictions/      # Prediction outputs
+│   ├── predictions/     # Prediction outputs
+│   │   ├── partial_dataset/  # Predictions from partial dataset models
+│   │   └── full_dataset/     # Predictions from full dataset models
 │   ├── validation/       # Validation results
 │   └── comparison/       # Model comparison results
 └── venv/                 # Virtual environment
@@ -342,6 +348,8 @@ The project supports four neural network architectures, each with different comp
 
 When training completes:
 - Model automatically saves to `models/dogs_vs_cats_{model_type}_final_TIMESTAMP.h5`
+- Models are organized by dataset: `models/partial_dataset/` or `models/full_dataset/`
+- Training logs are saved to `logs/partial_dataset/` or `logs/full_dataset/`
 - A copy is saved to `results/models/` for presentation
 - Training summary displays final accuracy and training time
 - Model path is displayed
@@ -366,8 +374,9 @@ python src/predict.py
 This process:
 - Loads the trained model (automatically finds latest or uses config)
 - Predicts on all test images in `data/test/`
-- Saves predictions to `results/predictions/predictions.csv`
+- Saves predictions to `results/predictions/partial_dataset/predictions.csv` or `results/predictions/full_dataset/predictions.csv`
 - Format: `id,label` (0=cat, 1=dog)
+- Predictions are organized by dataset type (partial or full) for easy comparison
 
 ### Step 4: Model Validation
 
@@ -404,13 +413,22 @@ ps aux | grep "python.*train" | grep -v grep
 
 **Monitor log file:**
 ```bash
-tail -f logs/training.log    # Follow live updates (Ctrl+C to exit)
-tail -50 logs/training.log   # See last 50 lines
+# For partial dataset training
+tail -f logs/partial_dataset/training_transfer.log    # Follow live updates (Ctrl+C to exit)
+tail -50 logs/partial_dataset/training_transfer.log   # See last 50 lines
+
+# For full dataset training
+tail -f logs/full_dataset/training_transfer.log        # Follow live updates
+tail -50 logs/full_dataset/training_transfer.log       # See last 50 lines
 ```
 
 **Check log file size:**
 ```bash
-ls -lh logs/training.log
+# Partial dataset
+ls -lh logs/partial_dataset/training_transfer.log
+
+# Full dataset
+ls -lh logs/full_dataset/training_transfer.log
 ```
 - File growing: Training is writing logs
 - File size constant: Training might be stuck
@@ -581,7 +599,9 @@ ls data/train/ | head -10
 
 ### "Model file not found"
 **Solution:** Check `models/` folder and update configuration
-- Verify models exist: `ls models/*.h5`
+- Verify models exist: 
+  - Partial dataset: `ls models/partial_dataset/*.h5`
+  - Full dataset: `ls models/full_dataset/*.h5`
 - Edit `configs/predict.yaml`: Set `model.path: "latest"` for auto-detection
 - Or specify exact model path in config
 
@@ -623,8 +643,9 @@ python src/validate.py
 # Compare models
 python src/compare_models.py
 
-# Monitor training logs
-tail -f logs/training.log
+# Monitor training logs (adjust path based on dataset type)
+tail -f logs/partial_dataset/training_transfer.log  # Partial dataset
+tail -f logs/full_dataset/training_transfer.log     # Full dataset
 ```
 
 ---
@@ -643,7 +664,8 @@ tail -f logs/training.log
 
 ## Important Notes
 
-- **Large files excluded:** `data/train/`, `data/test/`, `models/*.h5` are not in Git
+- **Large files excluded:** `data/train/`, `data/test/`, `models/*.h5`, `logs/*.log`, `results/predictions/*.csv` are not in Git
+- **Organized structure:** Models, logs, and predictions are organized by dataset type (`partial_dataset/` or `full_dataset/`) for easy comparison
 - **Always activate venv:** Required before running any Python code
 - **Training takes time:** Be patient, especially with full dataset
 - **Models auto-save:** Best model saved automatically during training

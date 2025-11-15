@@ -297,6 +297,9 @@ def train_model(config_path=None, config_name=None):
         print("STEP 7: Saving final model...")
         print("-" * 70)
         
+        # Save model to models directory
+        # Note: Models should be manually organized into models/partial_dataset/ or models/full_dataset/
+        # based on the dataset used for training (check data.max_training_images in config)
         final_model_filename = os.path.join(models_dir, f'{prefix}_{model_type}_final_{timestamp}.h5')
         model.save(final_model_filename)
         
@@ -306,6 +309,7 @@ def train_model(config_path=None, config_name=None):
         
         print(f"Model saved to: {final_model_filename}")
         print(f"Model copied to: {results_model_path}")
+        print("Note: Organize models into models/partial_dataset/ or models/full_dataset/ for comparison")
         print()
     
     # ============================================

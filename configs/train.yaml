@@ -21,7 +21,7 @@ image:
 
 # Data settings
 data:
-  max_training_images: 5000  # Set to null for full dataset (all 25K images), or number for subset
+  max_training_images: null  # Set to null for full dataset (all 25K images), or number for subset
   # For full dataset training, set: max_training_images: null
   validation_split: 0.2  # Fraction of data for validation (0.2 = 20%)
   random_seed: 42  # For reproducibility
@@ -29,7 +29,7 @@ data:
 
 # Model architecture settings
 model:
-  type: "simple_cnn"  # Options: "simple_cnn", "advanced_cnn", "deep_custom_cnn", "transfer_learning"
+  type: "deep_custom_cnn"  # Options: "simple_cnn", "advanced_cnn", "deep_custom_cnn", "transfer_learning"
   input_shape: [224, 224, 3]  # [height, width, channels] - auto-set from image.size
   num_classes: 2
   
@@ -113,5 +113,8 @@ output:
 logging:
   level: "INFO"  # Options: "DEBUG", "INFO", "WARNING", "ERROR"
   save_logs: true
-  log_file: "logs/training.log"
+  # Log file path - training logs are organized by dataset type
+  # Partial dataset: logs/partial_dataset/training.log
+  # Full dataset: logs/full_dataset/training.log
+  log_file: "logs/training.log"  # Default path (logs are organized by dataset type)
 

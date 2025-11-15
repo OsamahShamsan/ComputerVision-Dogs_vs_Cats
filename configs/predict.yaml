@@ -16,7 +16,10 @@ paths:
 # Model settings
 model:
   # Model path - can be specific file or "latest" to use most recent
-  path: "latest"  # Options: "latest", or specific path like "models/dogs_vs_cats_transfer_final_20251115_154323.h5"
+  # Note: Models are organized in models/partial_dataset/ or models/full_dataset/
+  # Use "latest" to auto-detect, or specify full path like:
+  # "models/partial_dataset/dogs_vs_cats_transfer_final_20251115_154323.h5"
+  path: "latest"  # Options: "latest", or specific path
   model_type: null  # Auto-detect from filename if null
   
 # Image preprocessing
@@ -28,7 +31,10 @@ image:
 # Prediction settings
 prediction:
   batch_size: 32  # Process images in batches
-  output_csv: "results/predictions/predictions.csv"
+  # Output path - organize by dataset type for comparison
+  # Use "results/predictions/partial_dataset/predictions.csv" for partial dataset models
+  # Use "results/predictions/full_dataset/predictions.csv" for full dataset models
+  output_csv: "results/predictions/predictions.csv"  # Default path (can be overridden)
   threshold: 0.5  # Probability threshold for binary classification
   save_probabilities: true  # Save raw probabilities in addition to binary predictions
 

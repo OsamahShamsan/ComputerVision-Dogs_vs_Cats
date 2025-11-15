@@ -214,6 +214,8 @@ def predict_test_set(config_path=None, config_name=None):
     print("-" * 70)
     
     # Create DataFrame - save to results/predictions
+    # Note: Predictions should be organized by dataset type (partial_dataset/ or full_dataset/)
+    # for easy comparison between partial and full dataset model results
     output_csv = prediction_config.get('output_csv', 'results/predictions/predictions.csv')
     if not os.path.isabs(output_csv):
         output_csv = os.path.join(results_dir['predictions'], os.path.basename(output_csv))
