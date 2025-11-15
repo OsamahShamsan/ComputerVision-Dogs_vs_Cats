@@ -1,0 +1,67 @@
+# ============================================
+# REQUIREMENTS.TXT - Python Package Dependencies
+# ============================================
+# This file lists all Python libraries (packages) needed for this project.
+# To install all packages, run: pip install -r requirements.txt
+# (Make sure your virtual environment is activated first!)
+
+# ============================================
+# DEEP LEARNING FRAMEWORK
+# ============================================
+tensorflow>=2.13.0
+# TensorFlow: Google's deep learning framework
+# - Used to build and train neural networks (AI models)
+# - Handles image classification, data processing, model training
+# - Version 2.13+ includes Keras (high-level API) built-in
+# - This is the MAIN library for our dogs vs cats classifier
+
+# ============================================
+# DATA PROCESSING & NUMERICAL COMPUTING
+# ============================================
+numpy>=1.24.0
+# NumPy: Fundamental package for numerical computing in Python
+# - Provides arrays and mathematical functions
+# - Images are converted to NumPy arrays for processing
+# - Essential for all machine learning operations
+
+pandas>=2.0.0
+# Pandas: Data manipulation and analysis library
+# - Used to read/write CSV files (like sampleSubmission.csv)
+# - Organizes data in tables (DataFrames)
+# - Helps manage image labels and metadata
+
+# ============================================
+# IMAGE PROCESSING
+# ============================================
+Pillow>=10.0.0
+# Pillow (PIL): Python Imaging Library
+# - Opens, manipulates, and saves image files (JPG, PNG, etc.)
+# - Resizes images, converts formats
+# - Works with image data from files
+
+opencv-python>=4.8.0
+# OpenCV: Open Source Computer Vision Library
+# - Advanced image processing and computer vision
+# - Image transformations, filters, edge detection
+# - Faster image operations than Pillow for some tasks
+
+# ============================================
+# VISUALIZATION
+# ============================================
+matplotlib>=3.7.0
+# Matplotlib: Plotting and visualization library
+# - Creates graphs, charts, and visualizations
+# - Plot training accuracy/loss over time
+# - Display sample images from dataset
+# - Visualize model predictions
+
+# ============================================
+# MACHINE LEARNING UTILITIES
+# ============================================
+scikit-learn>=1.3.0
+# scikit-learn: Machine learning utilities
+# - Provides helper functions for data splitting
+# - Evaluation metrics (accuracy, precision, recall)
+# - Data preprocessing tools
+# - Not the main framework, but useful utilities
+

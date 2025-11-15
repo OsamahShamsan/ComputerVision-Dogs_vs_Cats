@@ -1,0 +1,82 @@
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv/
+
+# Python compiled files and cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.pyc
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Model files (generated during training)
+*.h5
+*.hdf5
+*.pb
+*.pkl
+*.joblib
+*.ckpt
+*.ckpt.*
+models/*
+!models/.gitkeep
+
+# Training logs and outputs
+*.log
+tensorboard_logs/
+runs/
+experiment_results.txt
+!logs/.gitkeep
+
+# Data directories (large files)
+data/sampleSubmission.csv
+data/train/
+data/test/
+*.csv
+!data/sampleSubmission.csv
+!predictions.csv
+!data/.gitkeep
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-*
+
+# OS generated files
+.DS_Store
+.DS_Store?
+**/.DS_Store
+**/.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environment variables and secrets
+.env
+.env.local
+secrets.json
+config.json
+
+# Agent/internal files (not for version control)
+AGENT_GUIDELINES.md

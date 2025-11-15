@@ -1,0 +1,209 @@
+==========================================================================================
+MODEL COMPARISON REPORT - DOGS VS CATS CLASSIFICATION
+==========================================================================================
+
+MODEL 1: Advanced CNN
+------------------------------------------------------------------------------------------
+  Name: dogs_vs_cats_advanced_20251115_144301
+  File: models/dogs_vs_cats_advanced_20251115_144301.h5
+  File Size: 442.53 MB
+  Total Parameters: 38,663,489 (38.66M)
+  Trainable Parameters: 38,663,489 (38.66M)
+  Non-trainable Parameters: 0
+  Number of Layers: 14
+  Input Shape: (None, 224, 224, 3)
+  Output Shape: (None, 1)
+
+MODEL 2: Advanced CNN
+------------------------------------------------------------------------------------------
+  Name: dogs_vs_cats_advanced_final_20251115_144301
+  File: models/dogs_vs_cats_advanced_final_20251115_144301.h5
+  File Size: 442.53 MB
+  Total Parameters: 38,663,489 (38.66M)
+  Trainable Parameters: 38,663,489 (38.66M)
+  Non-trainable Parameters: 0
+  Number of Layers: 14
+  Input Shape: (None, 224, 224, 3)
+  Output Shape: (None, 1)
+
+MODEL 3: Simple CNN
+------------------------------------------------------------------------------------------
+  Name: dogs_vs_cats_simple_20251115_142649
+  File: models/dogs_vs_cats_simple_20251115_142649.h5
+  File Size: 509.63 MB
+  Total Parameters: 44,527,681 (44.53M)
+  Trainable Parameters: 44,527,681 (44.53M)
+  Non-trainable Parameters: 0
+  Number of Layers: 12
+  Input Shape: (None, 224, 224, 3)
+  Output Shape: (None, 1)
+
+MODEL 4: Simple CNN
+------------------------------------------------------------------------------------------
+  Name: dogs_vs_cats_simple_20251115_143226
+  File: models/dogs_vs_cats_simple_20251115_143226.h5
+  File Size: 509.63 MB
+  Total Parameters: 44,527,681 (44.53M)
+  Trainable Parameters: 44,527,681 (44.53M)
+  Non-trainable Parameters: 0
+  Number of Layers: 12
+  Input Shape: (None, 224, 224, 3)
+  Output Shape: (None, 1)
+
+MODEL 5: Simple CNN
+------------------------------------------------------------------------------------------
+  Name: dogs_vs_cats_simple_20251115_152526
+  File: models/dogs_vs_cats_simple_20251115_152526.h5
+  File Size: 509.63 MB
+  Total Parameters: 44,527,681 (44.53M)
+  Trainable Parameters: 44,527,681 (44.53M)
+  Non-trainable Parameters: 0
+  Number of Layers: 12
+  Input Shape: (None, 224, 224, 3)
+  Output Shape: (None, 1)
+
+MODEL 6: Simple CNN
+------------------------------------------------------------------------------------------
+  Name: dogs_vs_cats_simple_final_20251115_142649
+  File: models/dogs_vs_cats_simple_final_20251115_142649.h5
+  File Size: 509.63 MB
+  Total Parameters: 44,527,681 (44.53M)
+  Trainable Parameters: 44,527,681 (44.53M)
+  Non-trainable Parameters: 0
+  Number of Layers: 12
+  Input Shape: (None, 224, 224, 3)
+  Output Shape: (None, 1)
+
+MODEL 7: Simple CNN
+------------------------------------------------------------------------------------------
+  Name: dogs_vs_cats_simple_final_20251115_143226
+  File: models/dogs_vs_cats_simple_final_20251115_143226.h5
+  File Size: 509.63 MB
+  Total Parameters: 44,527,681 (44.53M)
+  Trainable Parameters: 44,527,681 (44.53M)
+  Non-trainable Parameters: 0
+  Number of Layers: 12
+  Input Shape: (None, 224, 224, 3)
+  Output Shape: (None, 1)
+
+MODEL 8: Simple CNN
+------------------------------------------------------------------------------------------
+  Name: dogs_vs_cats_simple_final_20251115_152526
+  File: models/dogs_vs_cats_simple_final_20251115_152526.h5
+  File Size: 509.63 MB
+  Total Parameters: 44,527,681 (44.53M)
+  Trainable Parameters: 44,527,681 (44.53M)
+  Non-trainable Parameters: 0
+  Number of Layers: 12
+  Input Shape: (None, 224, 224, 3)
+  Output Shape: (None, 1)
+
+MODEL 9: Transfer Learning
+------------------------------------------------------------------------------------------
+  Name: dogs_vs_cats_transfer_20251115_152610
+  File: models/dogs_vs_cats_transfer_20251115_152610.h5
+  File Size: 10.85 MB
+  Total Parameters: 2,422,081 (2.42M)
+  Trainable Parameters: 164,097 (0.16M)
+  Non-trainable Parameters: 2,257,984
+  Number of Layers: 5
+  Input Shape: (None, 224, 224, 3)
+  Output Shape: (None, 1)
+
+MODEL 10: Transfer Learning
+------------------------------------------------------------------------------------------
+  Name: dogs_vs_cats_transfer_20251115_152711
+  File: models/dogs_vs_cats_transfer_20251115_152711.h5
+  File Size: 10.85 MB
+  Total Parameters: 2,422,081 (2.42M)
+  Trainable Parameters: 164,097 (0.16M)
+  Non-trainable Parameters: 2,257,984
+  Number of Layers: 5
+  Input Shape: (None, 224, 224, 3)
+  Output Shape: (None, 1)
+
+MODEL 11: Transfer Learning
+------------------------------------------------------------------------------------------
+  Name: dogs_vs_cats_transfer_20251115_154321
+  File: models/dogs_vs_cats_transfer_20251115_154321.h5
+  File Size: 10.85 MB
+  Total Parameters: 2,422,081 (2.42M)
+  Trainable Parameters: 164,097 (0.16M)
+  Non-trainable Parameters: 2,257,984
+  Number of Layers: 5
+  Input Shape: (None, 224, 224, 3)
+  Output Shape: (None, 1)
+
+MODEL 12: Transfer Learning
+------------------------------------------------------------------------------------------
+  Name: dogs_vs_cats_transfer_20251115_154323
+  File: models/dogs_vs_cats_transfer_20251115_154323.h5
+  File Size: 10.85 MB
+  Total Parameters: 2,422,081 (2.42M)
+  Trainable Parameters: 164,097 (0.16M)
+  Non-trainable Parameters: 2,257,984
+  Number of Layers: 5
+  Input Shape: (None, 224, 224, 3)
+  Output Shape: (None, 1)
+
+MODEL 13: Transfer Learning
+------------------------------------------------------------------------------------------
+  Name: dogs_vs_cats_transfer_final_20251115_152610
+  File: models/dogs_vs_cats_transfer_final_20251115_152610.h5
+  File Size: 10.85 MB
+  Total Parameters: 2,422,081 (2.42M)
+  Trainable Parameters: 164,097 (0.16M)
+  Non-trainable Parameters: 2,257,984
+  Number of Layers: 5
+  Input Shape: (None, 224, 224, 3)
+  Output Shape: (None, 1)
+
+MODEL 14: Transfer Learning
+------------------------------------------------------------------------------------------
+  Name: dogs_vs_cats_transfer_final_20251115_152711
+  File: models/dogs_vs_cats_transfer_final_20251115_152711.h5
+  File Size: 10.85 MB
+  Total Parameters: 2,422,081 (2.42M)
+  Trainable Parameters: 164,097 (0.16M)
+  Non-trainable Parameters: 2,257,984
+  Number of Layers: 5
+  Input Shape: (None, 224, 224, 3)
+  Output Shape: (None, 1)
+
+MODEL 15: Transfer Learning
+------------------------------------------------------------------------------------------
+  Name: dogs_vs_cats_transfer_final_20251115_154321
+  File: models/dogs_vs_cats_transfer_final_20251115_154321.h5
+  File Size: 10.85 MB
+  Total Parameters: 2,422,081 (2.42M)
+  Trainable Parameters: 164,097 (0.16M)
+  Non-trainable Parameters: 2,257,984
+  Number of Layers: 5
+  Input Shape: (None, 224, 224, 3)
+  Output Shape: (None, 1)
+
+MODEL 16: Transfer Learning
+------------------------------------------------------------------------------------------
+  Name: dogs_vs_cats_transfer_final_20251115_154323
+  File: models/dogs_vs_cats_transfer_final_20251115_154323.h5
+  File Size: 10.85 MB
+  Total Parameters: 2,422,081 (2.42M)
+  Trainable Parameters: 164,097 (0.16M)
+  Non-trainable Parameters: 2,257,984
+  Number of Layers: 5
+  Input Shape: (None, 224, 224, 3)
+  Output Shape: (None, 1)
+
+==========================================================================================
+SUMMARY
+==========================================================================================
+
+Complexity Comparison:
+  - Simple CNN: Basic architecture, moderate complexity
+  - Advanced CNN: Deeper layers, higher complexity
+  - Transfer Learning: Pre-trained base, efficient fine-tuning
+
+Use Cases:
+  - Simple CNN: Good for learning, moderate accuracy
+  - Advanced CNN: Better accuracy, requires more training time
+  - Transfer Learning: Best accuracy, fastest training, industry standard
